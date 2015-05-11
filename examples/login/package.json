@@ -3,6 +3,12 @@
   "version": "0.0.0",
   "dependencies": {
     "express": ">= 0.0.0",
-    "passport": ">= 0.0.0"
+    "passport": ">= 0.0.0",
+    "express-session": ">= 0.0.0",
+    "cookie-parser": ">= 0.0.0",
+    "method-override": ">= 0.0.0",
+    "jade": ">= 0.0.0",
+    "morgan":"*"
+
   }
 }
