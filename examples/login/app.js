@@ -3,28 +3,24 @@ var express = require('express')
   , logger = require('morgan')
   , util = require('util')
   , session = require('express-session')
-//  , bodyParser = require("body-parser")
   , cookieParser = require("cookie-parser")
   , methodOverride = require('method-override')
 //the following should be replaced by require("wo-api-nodejs") instead
   , woQuery = require("../../lib/index").Query
   , woStrategy = require('../../lib/index').Strategy;
 
-var WO_CLIENT_ID = "55197ade2a80faff1366c49e"
+
+// This example will query the soton webobservatory.
+// replace these values to query your own webobservatory. 
+var AUTH_URL = 'https://webobservatory.soton.ac.uk/oauth/authorise/';
+var TOKEN_URL ='https://webobservatory.soton.ac.uk/oauth/token/';
+var WO_CLIENT_ID = "55197ade2a80faff1366c49e";
 var WO_CLIENT_SECRET = "4cceb42c2cb1edba";
 
 
 //ignore wo server certificate 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
-
-// Passport session setup.
-//   To support persistent login sessions, Passport needs to be able to
-//   serialize users into and deserialize users out of the session.  Typically,
-//   this will be as simple as storing the user ID when serializing, and finding
-//   the user by ID when deserializing.  However, since this example does not
-//   have a database of user records, the complete 37signals profile is
-//   serialized and deserialized.
 passport.serializeUser(function(user, done) {
   done(null, user);
 });
@@ -33,12 +29,11 @@ passport.deserializeUser(function(obj, done) {
   done(null, obj);
 });
 
-
-// Use the Thirty7signalsStrategy within Passport.
-//   Strategies in Passport require a `verify` function, which accept
-//   credentials (in this case, an accessToken, refreshToken, and 37signals
-//   profile), and invoke a callback with a user object.
+//Creating a new strategy. 
+//optional options:
 passport.use(new woStrategy({
+    authorizationURL: AUTH_URL,
+    tokenURL: TOKEN_URL,
     clientID: WO_CLIENT_ID,
     clientSecret: WO_CLIENT_SECRET,
     callbackURL: "http://127.0.0.1:3000/auth/wo/callback"
@@ -52,17 +47,6 @@ passport.use(new woStrategy({
         };
 
         done(null, user);
-      
-    // asynchronous verification, for effect...
-    //process.nextTick(function () {
-    //console.log(accessToken);
-    //console.log(profile);  
-      // To keep the example simple, the user's 37signals profile is returned to
-      // represent the logged-in user.  In a typical application, you would want
-      // to associate the 37signals account with a user record in your database,
-      // and return that user instead.
-     // return done(null, profile);
-   // });
   }
 ));
 
@@ -93,8 +77,6 @@ var app = express();
 
 
 
-//accessToken = "VgPMOdx5jPNKbk15xsICldVkFZkyxnE5J6zRZyGRKmw=";
-//var client = new woQuery("webobservatory.soton.ac.uk",req.user.accessToken);
 var client; 
 var streamdata; // contains the stream data
 
@@ -125,6 +107,7 @@ app.get('/query', function(req, res){
         client = new woQuery("webobservatory.soton.ac.uk", req.user.accessToken);
     }
 
+    //example dataset and query
     var datasetid = "52e19220bef627683c79c3a6";
     var query = "SELECT * WHERE {  ?subject rdf:type ?class} LIMIT 10";
     var rst = "";
@@ -246,19 +229,14 @@ app.get('/login', function(req, res){
   res.render('login', { user: req.user });
 });
 
-// GET /auth/37signals
-//   Use passport.authenticate() as route middleware to authenticate the
-//   request.  The first step in 37signals authentication will involve
-//   redirecting the user to 37signals.com.  After authorization, 37signals
-//   will redirect the user back to this application at /auth/37signals/callback
 app.get('/auth/wo',
   passport.authenticate('passport-wo'),
   function(req, res){
-    // The request will be redirected to 37signals for authentication, so this
+    // The request will be redirected to webobservatory for authentication, so this
     // function will not be called.
   });
 
-// GET /auth/37signals/callback
+// GET /auth/wo/callback
 //   Use passport.authenticate() as route middleware to authenticate the
 //   request.  If authentication fails, the user will be redirected back to the
 //   login page.  Otherwise, the primary route function function will be called,
